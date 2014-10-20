@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -26,8 +27,8 @@ public class NonoGrid extends JPanel
 	private List<List<Integer>>	rulesY;
 	private List<List<Integer>>	rulesX;
 	
-	int									dimensionX			= 0;
-	int									dimensionY			= 0;
+	private int							dimensionX			= 0;
+	private int							dimensionY			= 0;
 	
 	
 	public NonoGrid()
@@ -64,7 +65,7 @@ public class NonoGrid extends JPanel
 					if (positions[i][j] != null)
 					{
 						g.setColor((positions[i][j].getColor().getColor()));
-						g.fillRect(rectSize * i, (rectSize * (positions[0].length - 1)) - rectSize * j, rectSize, rectSize);
+						g.fillRect(rectSize * i, rectSize * j, rectSize, rectSize);
 					}
 				}
 			}
@@ -145,7 +146,8 @@ public class NonoGrid extends JPanel
 		{
 			e.printStackTrace();
 		}
-		rectSize = MAX_SIZE / positions.length;
+		Collections.reverse(rulesY);
+		rectSize = MAX_SIZE / Math.max(positions.length, positions[0].length);
 		return positions;
 	}
 	
@@ -153,11 +155,6 @@ public class NonoGrid extends JPanel
 	// -------------------------------------------------------------------------
 	// --------------------------- Getter and Setter ---------------------------
 	// -------------------------------------------------------------------------
-	
-	public int getGridSize()
-	{
-		return positions.length;
-	}
 	
 	
 	/**
@@ -211,6 +208,24 @@ public class NonoGrid extends JPanel
 	public void setRulesX(List<List<Integer>> rulesX)
 	{
 		this.rulesX = rulesX;
+	}
+	
+	
+	/**
+	 * @return the dimensionX
+	 */
+	public int getDimensionX()
+	{
+		return dimensionX;
+	}
+	
+	
+	/**
+	 * @return the dimensionY
+	 */
+	public int getDimensionY()
+	{
+		return dimensionY;
 	}
 	
 	

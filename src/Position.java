@@ -8,7 +8,7 @@ public class Position implements IState
 	private int				x;
 	private int				y;
 	
-	private DomainColor	color	= new DomainColor(Color.black, 0);
+	private DomainColor	color	= new DomainColor(Color.black, 1);
 	
 	
 	/**
@@ -20,6 +20,21 @@ public class Position implements IState
 		super();
 		this.x = x;
 		this.y = y;
+	}
+	
+	
+	public Position(int x, int y, int index)
+	{
+		super();
+		this.x = x;
+		this.y = y;
+		if (index == 99)
+		{
+			color = new DomainColor(Color.gray, index);
+		} else if (index == 0)
+		{
+			color = new DomainColor(Color.orange, index);
+		}
 	}
 	
 	
