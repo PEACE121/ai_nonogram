@@ -1,4 +1,3 @@
-import gac.AStarAdapter;
 import gac.ENextVariable;
 import gac.GACState;
 import gac.IDomainAttribute;
@@ -7,7 +6,6 @@ import gac.constraintNetwork.Constraint;
 import gac.constraintNetwork.Variable;
 import gac.instances.VI;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -50,47 +48,61 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 		f.setVisible(true);
 		
 		List<Constraint> constraints = new LinkedList<Constraint>();
-		Map<String, NonoVariable> vars = new HashMap<String, NonoVariable>();
+		Map<String, Variable> vars = new HashMap<String, Variable>();
 		
-		List<IDomainAttribute> domains = new ArrayList<IDomainAttribute>();
-		domains.add(new DomainColor(Color.black, 1));
-		domains.add(new DomainColor(Color.white, 0));
 		
+		int xsize = grid.getRulesX().size();
+		int ysize = grid.getRulesY().size();
 		// fill variables
+		for (int x = 0; x < grid.getDimensionX(); x++)
+		{
+			String columnName = "column" + x;
+			List<IDomainAttribute> domains = new ArrayList<IDomainAttribute>();
+			List<Integer> columnRules = grid.getRulesX().get(x);
+			int freeFileds = calculateFreeFields(columnRules, ysize);
+			String constraintColumn = generateConstraintForRow("", columnRules, 0, x, 0, ysize, freeFileds, false);
+			System.out.println(constraintColumn);
+			for (Integer[] domainCombination : parseOldConstraint(constraintColumn))
+			{
+				domains.add(new DomainCombination(domainCombination, false, x));
+			}
+			vars.put(columnName, new Variable(columnName, domains));
+		}
+		for (int y = 0; y < grid.getDimensionY(); y++)
+		{
+			String rowName = "row" + y;
+			List<IDomainAttribute> domains = new ArrayList<IDomainAttribute>();
+			List<Integer> rowRules = grid.getRulesY().get(y);
+			int freeFileds = calculateFreeFields(rowRules, xsize);
+			String constraintRow = generateConstraintForRow("", rowRules, 0, 0, y, xsize, freeFileds, true);
+			System.out.println(constraintRow);
+			for (Integer[] domainCombination : parseOldConstraint(constraintRow))
+			{
+				domains.add(new DomainCombination(domainCombination, true, y));
+			}
+			vars.put(rowName, new Variable(rowName, domains));
+		}
+		
+		// define constraints
 		for (int x = 0; x < grid.getDimensionX(); x++)
 		{
 			for (int y = 0; y < grid.getDimensionY(); y++)
 			{
-				String gridCell = createVariableName(x, y);
-				vars.put(gridCell, new NonoVariable(gridCell, domains, x, y));
+				String hashKeyRow = "row" + y;
+				String hashKeyColumn = "column" + x;
+				Variable variableColumn = vars.get(hashKeyColumn);
+				Variable variableRow = vars.get(hashKeyRow);
+				Map<String, Variable> variables = new HashMap<String, Variable>();
+				variables.put(hashKeyRow, variableRow);
+				variables.put(hashKeyColumn, variableColumn);
+				constraints.add(new Constraint(hashKeyColumn + "==" + hashKeyRow, variables));
 			}
 		}
 		
-		// define constraints
-		int xsize = grid.getRulesX().size();
-		int ysize = grid.getRulesY().size();
-		for (int y = 0; y < ysize; y++)
-		{
-			List<Integer> rowRules = grid.getRulesY().get(y);
-			int freeFileds = calculateFreeFields(rowRules, xsize);
-			String constraintRow = generateConstraintForRow("", rowRules, 0, 0, y, xsize, freeFileds, true);
-			constraintRow = constraintRow.substring(0, constraintRow.length() - 4);
-			System.out.println(constraintRow);
-			constraints.add(new Constraint(constraintRow, createListOfVariables(y, true, vars)));
-		}
-		for (int x = 0; x < xsize; x++)
-		{
-			List<Integer> columnRules = grid.getRulesX().get(x);
-			int freeFileds = calculateFreeFields(columnRules, ysize);
-			String constraintColumn = generateConstraintForRow("", columnRules, 0, x, 0, ysize, freeFileds, false);
-			constraintColumn = constraintColumn.substring(0, constraintColumn.length() - 4);
-			System.out.println(constraintColumn);
-			constraints.add(new Constraint(constraintColumn, createListOfVariables(x, false, vars)));
-		}
-		
 		// init adapters,..
+		// NashornScriptEngine.getInstance().setEvalType(EEvaluationType.NONO_HACK);
 		List<Variable> variables = new ArrayList<Variable>(vars.values());
-		AStarAdapter aStarGAC = new AStarAdapter(constraints, variables, heuristicGac);
+		NonoAStarAdapter aStarGAC = new NonoAStarAdapter(constraints, variables, heuristicGac);
 		aStarGAC.register(this);
 		aStarGAC.domainFilteringLoop();
 		aStarInstance = new AStar(aStarGAC);
@@ -109,20 +121,6 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 	}
 	
 	
-	private Map<String, Variable> createListOfVariables(int a, boolean isRow, Map<String, NonoVariable> variables)
-	{
-		Map<String, Variable> filteredVariables = new HashMap<String, Variable>();
-		for (NonoVariable var : variables.values())
-		{
-			if ((isRow && var.getY() == a) || (!isRow && var.getX() == a))
-			{
-				filteredVariables.put(var.getName(), var);
-			}
-		}
-		return filteredVariables;
-	}
-	
-	
 	private String generateConstraintForRow(String currentConstraint, List<Integer> blocks, int blockIndex, int x,
 			int y, int sizeRowColumn, int freeFields, boolean isRow)
 	{
@@ -130,7 +128,7 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 		{
 			while ((isRow && x < (sizeRowColumn)) || (!isRow && y < (sizeRowColumn)))
 			{
-				currentConstraint += createVariableName(x, y) + " == 0 && ";
+				currentConstraint += "0 && ";
 				if (isRow)
 				{
 					x++;
@@ -162,20 +160,20 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 			{
 				if (isRow)
 				{
-					constraintForBlock += createVariableName(j, y) + " == 0 && ";
+					constraintForBlock += "0 && ";
 				} else
 				{
-					constraintForBlock += createVariableName(x, j) + " == 0 && ";
+					constraintForBlock += "0 && ";
 				}
 			}
 			for (int k = 0; k < block; k++)
 			{
 				if (isRow)
 				{
-					constraintForBlock += createVariableName(currenta, y) + " == 1 && ";
+					constraintForBlock += "1 && ";
 				} else
 				{
-					constraintForBlock += createVariableName(x, currenta) + " == 1 && ";
+					constraintForBlock += "1 && ";
 				}
 				currenta++;
 			}
@@ -183,10 +181,10 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 			{
 				if (isRow)
 				{
-					constraintForBlock += createVariableName(currenta, y) + " == 0 && ";
+					constraintForBlock += "0 && ";
 				} else
 				{
-					constraintForBlock += createVariableName(x, currenta) + " == 0 && ";
+					constraintForBlock += "0 && ";
 				}
 				currenta++;
 			}
@@ -207,6 +205,25 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 	}
 	
 	
+	private List<Integer[]> parseOldConstraint(String input)
+	{
+		input = input.replaceAll(" ", "");
+		String[] combis = input.split("\\|\\|");
+		List<Integer[]> domainCombinations = new ArrayList<Integer[]>();
+		for (String combi : combis)
+		{
+			String[] values = combi.split("&&");
+			Integer[] domainCombination = new Integer[values.length];
+			for (int i = 0; i < domainCombination.length; i++)
+			{
+				domainCombination[i] = Integer.parseInt(values[i]);
+			}
+			domainCombinations.add(domainCombination);
+		}
+		return domainCombinations;
+	}
+	
+	
 	public void run()
 	{
 		long start = System.currentTimeMillis();
@@ -216,36 +233,46 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 	}
 	
 	
-	private String createVariableName(int x, int y)
-	{
-		return "pos" + x + "a" + y;
-	}
-	
-	
 	@Override
 	public void update(Node app, boolean force)
 	{
-		System.out.println("Assumption");
 		GACState gacState = (GACState) app.getState();
 		update(gacState, force);
 	}
 	
 	
 	@Override
-	public void update(GACState x, boolean force)
+	public void update(GACState gacState, boolean force)
 	{
-		System.out.println("Update");
 		Position[][] positions = new Position[grid.getDimensionX()][grid.getDimensionY()];
-		for (VI vi : x.getVis().values())
+		for (VI vi : gacState.getVis().values())
 		{
-			NonoVariable variable = (NonoVariable) vi.getVarInCNET();
 			if (vi.getDomain().size() == 1)
 			{
-				positions[variable.getX()][variable.getY()] = new Position(variable.getX(), variable.getY(), vi.getDomain()
-						.get(0).getNumericalRepresentation());
-			} else if (vi.getDomain().size() == 0)
-			{
-				positions[variable.getX()][variable.getY()] = new Position(variable.getX(), variable.getY(), 99);
+				DomainCombination domain = (DomainCombination) vi.getDomain().get(0);
+				for (int i = 0; i < domain.getCombination().length; i++)
+				{
+					int x;
+					int y;
+					if (domain.isRow())
+					{
+						x = i;
+						y = domain.getRowColumn();
+					} else
+					{
+						x = domain.getRowColumn();
+						y = i;
+					}
+					int value = domain.getValue(i);
+					if (positions[x][y] == null)
+					{
+						positions[x][y] = new Position(x, y, value);
+					} else if (value != positions[x][y].getValue())
+					{
+						positions[x][y] = new Position(x, y, 99);
+					}
+					
+				}
 			}
 		}
 		grid.setPositions(positions);

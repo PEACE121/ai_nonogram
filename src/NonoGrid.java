@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Graphics;
 import java.io.BufferedReader;
 import java.io.File;
@@ -64,7 +65,18 @@ public class NonoGrid extends JPanel
 				{
 					if (positions[i][j] != null)
 					{
-						g.setColor((positions[i][j].getColor().getColor()));
+						switch (positions[i][j].getValue())
+						{
+							case 0:
+								g.setColor(Color.white);
+								break;
+							case 1:
+								g.setColor(Color.black);
+								break;
+							default:
+								g.setColor(Color.gray);
+								break;
+						}
 						g.fillRect(rectSize * i, rectSize * j, rectSize, rectSize);
 					}
 				}

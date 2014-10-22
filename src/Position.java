@@ -1,58 +1,20 @@
-import java.awt.Color;
-
 import astarframework.IState;
 
 
 public class Position implements IState
 {
-	private int				x;
-	private int				y;
+	private int	x;
+	private int	y;
 	
-	private DomainColor	color	= new DomainColor(Color.black, 1);
+	private int	value;
 	
 	
-	/**
-	 * @param x
-	 * @param y
-	 */
-	public Position(int x, int y)
+	public Position(int x, int y, int value)
 	{
 		super();
 		this.x = x;
 		this.y = y;
-	}
-	
-	
-	public Position(int x, int y, int index)
-	{
-		super();
-		this.x = x;
-		this.y = y;
-		if (index == 99)
-		{
-			color = new DomainColor(Color.gray, index);
-		} else if (index == 0)
-		{
-			color = new DomainColor(Color.orange, index);
-		}
-	}
-	
-	
-	/**
-	 * @return the color
-	 */
-	public DomainColor getColor()
-	{
-		return color;
-	}
-	
-	
-	/**
-	 * @param color the color to set
-	 */
-	public void setColor(DomainColor color)
-	{
-		this.color = color;
+		this.value = value;
 	}
 	
 	
@@ -154,5 +116,24 @@ public class Position implements IState
 			return false;
 		return true;
 	}
+	
+	
+	/**
+	 * @return the value
+	 */
+	public int getValue()
+	{
+		return value;
+	}
+	
+	
+	/**
+	 * @param value the value to set
+	 */
+	public void setValue(int value)
+	{
+		this.value = value;
+	}
+	
 	
 }
