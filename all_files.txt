@@ -1,0 +1,8 @@
+0 nono-camel.txt
+1 nono-cat.txt
+2 nono-chick.txt
+3 nono-heart-1.txt
+4 nono-rabbit.txt
+5 nono-sailboat.txt
+6 nono-telephone.txt
+7 paper
