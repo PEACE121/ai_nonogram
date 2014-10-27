@@ -68,10 +68,10 @@ public class NonoGrid extends JPanel
 						switch (positions[i][j].getValue())
 						{
 							case 0:
-								g.setColor(Color.white);
+								g.setColor(Color.orange);
 								break;
 							case 1:
-								g.setColor(Color.black);
+								g.setColor(Color.red);
 								break;
 							default:
 								g.setColor(Color.gray);

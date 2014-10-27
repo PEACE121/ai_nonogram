@@ -3,6 +3,8 @@ import gac.GACState;
 import gac.IDomainAttribute;
 import gac.IGACObersvers;
 import gac.constraintNetwork.Constraint;
+import gac.constraintNetwork.EEvaluationType;
+import gac.constraintNetwork.NashornScriptEngine;
 import gac.constraintNetwork.Variable;
 import gac.instances.VI;
 
@@ -100,7 +102,7 @@ public class NonoPuzzle implements IGACObersvers, IAStarObersvers
 		}
 		
 		// init adapters,..
-		// NashornScriptEngine.getInstance().setEvalType(EEvaluationType.NONO_HACK);
+		NashornScriptEngine.getInstance().setEvalType(EEvaluationType.MAX_FLOW_HACK);
 		List<Variable> variables = new ArrayList<Variable>(vars.values());
 		NonoAStarAdapter aStarGAC = new NonoAStarAdapter(constraints, variables, heuristicGac);
 		aStarGAC.register(this);
